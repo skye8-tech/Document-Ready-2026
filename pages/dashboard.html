@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – Document Ready</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <div class="alert alert-info">
+      Welcome! Track how far you have gone with each service you started.
+    </div>
+    <div class="dash-grid" id="statsGrid">
+      <div class="dash-card">
+        <h3>Services started</h3>
+        <div class="big-num" id="statStarted">0</div>
+      </div>
+      <div class="dash-card">
+        <h3>Average progress</h3>
+        <div class="big-num" id="statAvg">0%</div>
+      </div>
+      <div class="dash-card">
+        <h3>Forms submitted</h3>
+        <div class="big-num" id="statForms">0</div>
+      </div>
+    </div>
+    <h2 class="mb-2">Your application progress</h2>
+    <div class="progress-list" id="progressList">
+      <div class="empty-state">
+        <div class="icon">📂</div>
+        <p>You have not started any service yet.</p>
+        <a href="services.html" class="btn btn-primary mt-2">Browse Services</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/services-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/header-footer.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (!requireAuth()) return;
+      initShell("dashboard", "Dashboard");
+      renderDashboard();
+    });
+
+    function renderDashboard() {
+      var session = getCurrentUser();
+      var userProg = getUserProgress(session.email);
+      var ids = Object.keys(userProg);
+      var list = document.getElementById("progressList");
+      var started = 0;
+      var totalPct = 0;
+      var forms = 0;
+
+      if (ids.length === 0) {
+        document.getElementById("statStarted").textContent = "0";
+        document.getElementById("statAvg").textContent = "0%";
+        document.getElementById("statForms").textContent = "0";
+        return;
+      }
+
+      var html = "";
+      ids.forEach(function (id) {
+        var service = getServiceById(id);
+        if (!service) return;
+        started++;
+        var pct = calcProgressPercent(id);
+        totalPct += pct;
+        var prog = userProg[id];
+        if (prog && prog.formSubmitted) forms++;
+        html += '<div class="progress-item">';
+        html += '<h4>' + service.icon + ' ' + escapeHtml(service.name) + '</h4>';
+        html += '<div class="progress-wrap">';
+        html += '<div class="progress-label"><span>Progress</span><span>' + pct + '%</span></div>';
+        html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
+        html += '</div>';
+        html += '<p class="text-muted mt-1" style="font-size:0.85rem">';
+        html += (prog.checked ? prog.checked.length : 0) + ' of ' + service.documents.length + ' documents checked';
+        if (prog.formSubmitted) html += ' · Form submitted';
+        html += '</p>';
+        html += '<a href="apply.html?id=' + encodeURIComponent(id) + '" class="btn btn-sm btn-primary mt-2">Continue</a>';
+        html += '</div>';
+      });
+
+      list.innerHTML = html || list.innerHTML;
+      document.getElementById("statStarted").textContent = String(started);
+      document.getElementById("statAvg").textContent = started ? Math.round(totalPct / started) + "%" : "0%";
+      document.getElementById("statForms").textContent = String(forms);
+    }
+  </script>
+</body>
+</html>

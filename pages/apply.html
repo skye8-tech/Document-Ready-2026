@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apply – Document Ready</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <div id="applyRoot">
+      <p class="text-muted">Loading...</p>
+    </div>
+  </div>
+
+  <script src="../js/services-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/header-footer.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (!requireAuth()) return;
+      var params = new URLSearchParams(window.location.search);
+      var id = params.get("id");
+      var service = getServiceById(id);
+      if (!service) {
+        initShell("services", "Apply");
+        document.getElementById("applyRoot").innerHTML =
+          '<div class="alert alert-danger">Service not found.</div><a href="services.html" class="btn btn-primary">Back to Services</a>';
+        return;
+      }
+      initShell("services", service.name);
+      renderApply(service);
+    });
+
+    function renderApply(service) {
+      var prog = getServiceProgress(service.id);
+      var checked = prog.checked || [];
+      var pct = calcProgressPercent(service.id);
+
+      var html = "";
+      html += '<div class="alert alert-info">This tool helps you prepare. It is not an official government application.</div>';
+      html += '<div class="progress-wrap mb-3">';
+      html += '<div class="progress-label"><span>Overall progress</span><span id="pctLabel">' + pct + '%</span></div>';
+      html += '<div class="progress-bar"><div class="progress-fill" id="pctBar" style="width:' + pct + '%"></div></div>';
+      html += '</div>';
+
+      /* Checklist */
+      html += '<section class="apply-section">';
+      html += '<h2>1. Document checklist</h2>';
+      html += '<p class="text-muted mb-2">Tick each document when you have prepared it. Progress is saved automatically.</p>';
+      html += '<ul class="checklist" id="checklist">';
+      service.documents.forEach(function (doc, idx) {
+        var isDone = checked.indexOf(idx) !== -1;
+        html += '<li class="checklist-item' + (isDone ? " done" : "") + '" data-idx="' + idx + '">';
+        html += '<input type="checkbox" id="doc' + idx + '"' + (isDone ? " checked" : "") + '>';
+        html += '<div class="item-body">';
+        html += '<div class="item-title">' + escapeHtml(doc.title) + '</div>';
+        html += '<div class="item-tip">' + escapeHtml(doc.tip) + '</div>';
+        html += '<div class="sample-doc">';
+        html += '<h4>Sample of a completed document</h4>';
+        html += '<pre>' + escapeHtml(doc.sample) + '</pre>';
+        html += '</div>';
+        html += '</div></li>';
+      });
+      html += '</ul></section>';
+
+      /* Application form */
+      html += '<section class="apply-section">';
+      html += '<h2>2. Application details</h2>';
+      html += '<p class="text-muted mb-2">Fill this form to mark your application as prepared. Data stays on your device.</p>';
+      if (prog.formSubmitted) {
+        html += '<div class="alert alert-info">You already submitted this form. You can update it below.</div>';
+      }
+      html += '<form id="appForm">';
+      html += '<div class="form-group"><label for="fullName">Full Name</label>';
+      html += '<input type="text" id="fullName" class="form-control" required value="' + escapeHtml(prog.formData && prog.formData.fullName || "") + '"></div>';
+      html += '<div class="form-group"><label for="phone">Phone Number</label>';
+      html += '<input type="tel" id="phone" class="form-control" placeholder="6XX XXX XXX" value="' + escapeHtml(prog.formData && prog.formData.phone || "") + '"></div>';
+      html += '<div class="form-group"><label for="city">City / Town</label>';
+      html += '<input type="text" id="city" class="form-control" value="' + escapeHtml(prog.formData && prog.formData.city || "") + '"></div>';
+      html += '<div class="form-group"><label for="notes">Notes (optional)</label>';
+      html += '<textarea id="notes" class="form-control" rows="3">' + escapeHtml(prog.formData && prog.formData.notes || "") + '</textarea></div>';
+      html += '<button type="submit" class="btn btn-primary">Save application details</button>';
+      html += '</form></section>';
+
+      html += '<p class="disclaimer">Document Ready is for guidance only. Always confirm requirements at the official office.</p>';
+      html += '<a href="services.html" class="btn btn-outline mt-2">← Back to Services</a>';
+
+      document.getElementById("applyRoot").innerHTML = html;
+
+      /* Checkbox handlers */
+      var boxes = document.querySelectorAll("#checklist input[type=checkbox]");
+      boxes.forEach(function (box) {
+        box.addEventListener("change", function () {
+          var item = box.closest(".checklist-item");
+          var idx = parseInt(item.getAttribute("data-idx"), 10);
+          var current = getServiceProgress(service.id);
+          var list = current.checked ? current.checked.slice() : [];
+          if (box.checked) {
+            if (list.indexOf(idx) === -1) list.push(idx);
+            item.classList.add("done");
+          } else {
+            list = list.filter(function (x) { return x !== idx; });
+            item.classList.remove("done");
+          }
+          current.checked = list;
+          setServiceProgress(service.id, current);
+          updatePct(service.id);
+        });
+      });
+
+      document.getElementById("appForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var current = getServiceProgress(service.id);
+        current.formSubmitted = true;
+        current.formData = {
+          fullName: document.getElementById("fullName").value.trim(),
+          phone: document.getElementById("phone").value.trim(),
+          city: document.getElementById("city").value.trim(),
+          notes: document.getElementById("notes").value.trim()
+        };
+        setServiceProgress(service.id, current);
+        updatePct(service.id);
+        alert("Application details saved on this device.");
+      });
+    }
+
+    function updatePct(serviceId) {
+      var pct = calcProgressPercent(serviceId);
+      var label = document.getElementById("pctLabel");
+      var bar = document.getElementById("pctBar");
+      if (label) label.textContent = pct + "%";
+      if (bar) bar.style.width = pct + "%";
+    }
+  </script>
+</body>
+</html>
