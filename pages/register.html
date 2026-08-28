@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register – Document Ready</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body class="auth-page">
+  <div class="auth-card">
+    <div style="text-align:right;margin-bottom:0.75rem">
+      <select id="langSelectAuth" class="lang-select" style="width:auto;color:var(--text);background:var(--bg);border-color:var(--border)">
+        <option value="en">English</option>
+        <option value="fr">Francais</option>
+      </select>
+    </div>
+    <h1 data-i18n="registerTitle">Create Account</h1>
+    <p class="subtitle" data-i18n="registerSubtitle">Register to access Document Ready</p>
+    <div id="msg" class="alert alert-danger hidden"></div>
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="name" data-i18n="fullName">Full Name</label>
+        <input type="text" id="name" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="email" data-i18n="email">Email</label>
+        <input type="email" id="email" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="password" data-i18n="password">Password</label>
+        <div class="password-wrap">
+          <input type="password" id="password" class="form-control" required minlength="6">
+          <button type="button" class="password-toggle" id="togglePass">👁</button>
+        </div>
+        <p class="form-hint" data-i18n="passHint">Use a password you can remember.</p>
+      </div>
+      <div class="form-group">
+        <label for="confirm" data-i18n="confirmPass">Confirm Password</label>
+        <div class="password-wrap">
+          <input type="password" id="confirm" class="form-control" required>
+          <button type="button" class="password-toggle" id="toggleConfirm">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="registerBtn">Register</button>
+    </form>
+    <p class="text-center mt-3 text-muted">
+      <span data-i18n="hasAccount">Already have an account?</span>
+      <a href="login.html" data-i18n="loginHere">Login here</a>
+    </p>
+    <p class="text-center mt-2">
+      <a href="../index.html" class="btn-ghost" data-i18n="backHome">Back to home</a>
+    </p>
+  </div>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      redirectIfLoggedIn();
+      applyTranslations();
+      setupAuthLangSelect("langSelectAuth");
+      setupPasswordToggle("togglePass", "password");
+      setupPasswordToggle("toggleConfirm", "confirm");
+
+      document.getElementById("registerForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var msg = document.getElementById("msg");
+        msg.classList.add("hidden");
+
+        var pass = document.getElementById("password").value;
+        var confirm = document.getElementById("confirm").value;
+        if (pass !== confirm) {
+          msg.textContent = getLang() === "fr"
+            ? "Les mots de passe ne correspondent pas."
+            : "Passwords do not match.";
+          msg.classList.remove("hidden");
+          return;
+        }
+
+        var result = registerUser(
+          document.getElementById("name").value,
+          document.getElementById("email").value,
+          pass
+        );
+        if (!result.ok) {
+          msg.textContent = result.msg;
+          msg.classList.remove("hidden");
+          return;
+        }
+        /* After register, go to login */
+        alert(result.msg);
+        window.location.href = "login.html";
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ – Document Ready</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <p class="text-muted mb-3" data-i18n="faqIntro"></p>
+    <div class="faq-list" id="faqList"></div>
+  </div>
+  <script src="../js/auth.js"></script>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (!requireAuth()) return;
+      initShell("faq", t("faq"));
+      showFaq();
+    });
+
+    function showFaq() {
+      var pairs = [
+        ["faq1q", "faq1a"], ["faq2q", "faq2a"], ["faq3q", "faq3a"], ["faq4q", "faq4a"],
+        ["faq5q", "faq5a"], ["faq6q", "faq6a"], ["faq7q", "faq7a"], ["faq8q", "faq8a"]
+      ];
+      var list = document.getElementById("faqList");
+      list.innerHTML = "";
+
+      for (var i = 0; i < pairs.length; i++) {
+        var item = makeEl("div", "faq-item");
+        var btn = makeEl("button", "faq-q");
+        btn.type = "button";
+        btn.appendChild(document.createTextNode(t(pairs[i][0]) + " "));
+        btn.appendChild(makeEl("span", null, "+"));
+        item.appendChild(btn);
+        item.appendChild(makeEl("div", "faq-a", t(pairs[i][1])));
+        list.appendChild(item);
+
+        btn.addEventListener("click", onFaqClick);
+      }
+    }
+
+    function onFaqClick(e) {
+      var btn = e.currentTarget;
+      var item = btn.parentElement;
+      var wasOpen = item.classList.contains("open");
+
+      var all = document.querySelectorAll(".faq-item");
+      for (var i = 0; i < all.length; i++) {
+        all[i].classList.remove("open");
+        all[i].querySelector(".faq-q span").textContent = "+";
+      }
+
+      if (!wasOpen) {
+        item.classList.add("open");
+        btn.querySelector("span").textContent = "−";
+      }
+    }
+  </script>
+</body>
+</html>

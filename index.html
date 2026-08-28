@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document Ready</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body class="landing-page">
+  <header class="landing-header">
+    <div class="brand">
+      <div class="logo-icon">DR</div>
+      <span>Document Ready</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.5rem">
+      <select id="langSelectAuth" class="lang-select" style="width:auto;color:#fff;border-color:rgba(255,255,255,0.3);background:transparent">
+        <option value="en">English</option>
+        <option value="fr">Francais</option>
+      </select>
+      <button type="button" class="btn btn-sm btn-outline" id="landingTheme" style="border-color:#fff;color:#fff">🌓</button>
+      <a href="pages/login.html" class="btn btn-sm btn-accent" data-i18n="loginBtn">Login</a>
+    </div>
+  </header>
+
+  <section class="landing-hero">
+    <div class="hero-content">
+      <h1 data-i18n="heroTitle">Prepare the right documents for government services in Cameroon</h1>
+      <p data-i18n="heroText">Clear checklists, preparation tips and offices to visit.</p>
+      <div class="hero-actions">
+        <a href="pages/register.html" class="btn btn-primary" data-i18n="createAccount">Create Account</a>
+        <a href="pages/login.html" class="btn btn-outline" data-i18n="alreadyAccount">Already have an account? Login</a>
+      </div>
+      <div class="alert alert-warning mt-4" style="text-align:left;max-width:480px;margin-left:auto;margin-right:auto" data-i18n="needAccount">
+        You need an account to access the site. Register first, then log in.
+      </div>
+      <p class="disclaimer" style="max-width:480px;margin-left:auto;margin-right:auto" data-i18n="notOfficialSite">
+        This is not an official government website.
+      </p>
+    </div>
+  </section>
+
+  <script src="js/auth.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (isLoggedIn()) {
+        window.location.href = "pages/dashboard.html";
+        return;
+      }
+      applyTranslations();
+      setupAuthLangSelect("langSelectAuth");
+      document.getElementById("landingTheme").addEventListener("click", toggleTheme);
+    });
+  </script>
+</body>
+</html>

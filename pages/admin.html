@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Document Ready</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <div class="alert alert-info" data-i18n="adminInfo"></div>
+    <div class="dash-grid mb-3">
+      <div class="dash-card">
+        <h3 data-i18n="totalApps">Total applications</h3>
+        <div class="big-num" id="adminTotal">0</div>
+      </div>
+    </div>
+    <h2 class="mb-2" data-i18n="recentApps">Recent applications</h2>
+    <div id="adminList"></div>
+  </div>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/progress.js"></script>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    /* Simple admin gate */
+    if (sessionStorage.getItem("docready_admin") !== "1") {
+      var pass = prompt("Admin password:");
+      if (pass === "admin123") {
+        sessionStorage.setItem("docready_admin", "1");
+      } else {
+        alert("Access denied.");
+        window.location.href = "dashboard.html";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      if (!requireAuth()) return;
+      initShell("admin", t("admin"));
+      showAdmin();
+    });
+
+    function showAdmin() {
+      var apps = getAllApplications();
+      document.getElementById("adminTotal").textContent = String(apps.length);
+      var list = document.getElementById("adminList");
+      list.innerHTML = "";
+
+      if (apps.length === 0) {
+        var empty = makeEl("div", "empty-state");
+        empty.appendChild(makeEl("p", null, t("noAppsYet")));
+        list.appendChild(empty);
+        return;
+      }
+
+      for (var i = 0; i < apps.length; i++) {
+        var a = apps[i];
+        var item = makeEl("div", "progress-item");
+        item.appendChild(makeEl("h4", null, a.serviceName));
+
+        var meta = makeEl("p", "text-muted");
+        meta.style.fontSize = "0.9rem";
+        meta.textContent = a.userName + " · " + a.userEmail + " · " +
+          a.checkedCount + "/" + a.totalDocs + " · " +
+          new Date(a.createdAt).toLocaleString();
+        item.appendChild(meta);
+
+        if (a.formData) {
+          var details = makeEl("p");
+          details.style.fontSize = "0.85rem";
+          details.textContent = (a.formData.fullName || "") + " · " +
+            (a.formData.phone || "") + " · " + (a.formData.city || "");
+          item.appendChild(details);
+        }
+        list.appendChild(item);
+      }
+    }
+  </script>
+</body>
+</html>

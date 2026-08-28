@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Services – Document Ready</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <p class="text-muted mb-3" data-i18n="chooseService">Choose a service</p>
+    <div class="services-toolbar">
+      <div class="search-box">
+        <input type="search" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search...">
+      </div>
+      <select id="categoryFilter" class="filter-select">
+        <option value="" data-i18n="allCategories">All categories</option>
+      </select>
+    </div>
+    <div class="services-grid" id="servicesGrid"></div>
+    <div class="empty-state hidden" id="noResults">
+      <div class="icon">🔍</div>
+      <p data-i18n="noMatch">No services match your search.</p>
+    </div>
+  </div>
+
+  <script src="../js/services-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/progress.js"></script>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (!requireAuth()) return;
+      initShell("services", t("services"));
+      fillCategories();
+      showServices(SERVICES);
+      document.getElementById("searchInput").addEventListener("input", onFilter);
+      document.getElementById("categoryFilter").addEventListener("change", onFilter);
+    });
+
+    function fillCategories() {
+      var select = document.getElementById("categoryFilter");
+      var cats = getCategories();
+      for (var i = 0; i < cats.length; i++) {
+        var opt = makeEl("option", null, categoryLabel(cats[i]));
+        opt.value = cats[i];
+        select.appendChild(opt);
+      }
+    }
+
+    function onFilter() {
+      var q = document.getElementById("searchInput").value.trim().toLowerCase();
+      var cat = document.getElementById("categoryFilter").value;
+      var result = [];
+      for (var i = 0; i < SERVICES.length; i++) {
+        var s = SERVICES[i];
+        var name = L(s, "name").toLowerCase();
+        var short = L(s, "short").toLowerCase();
+        var matchQ = !q || name.indexOf(q) !== -1 || short.indexOf(q) !== -1;
+        var matchCat = !cat || s.category === cat;
+        if (matchQ && matchCat) result.push(s);
+      }
+      showServices(result);
+    }
+
+    /* Build each service card with DOM methods */
+    function showServices(list) {
+      var grid = document.getElementById("servicesGrid");
+      var empty = document.getElementById("noResults");
+      grid.innerHTML = "";
+
+      if (list.length === 0) {
+        empty.classList.remove("hidden");
+        return;
+      }
+      empty.classList.add("hidden");
+
+      for (var i = 0; i < list.length; i++) {
+        var s = list[i];
+        var card = makeEl("article", "service-card");
+        card.appendChild(makeEl("div", "icon", s.icon));
+        card.appendChild(makeEl("h3", null, L(s, "name")));
+        card.appendChild(makeEl("p", null, L(s, "short")));
+
+        var meta = makeEl("div", "meta");
+        meta.textContent = categoryLabel(s.category) + " · " + L(s, "feeNote");
+        card.appendChild(meta);
+
+        var pct = calcProgressPercent(s.id);
+        if (pct > 0) {
+          var wrap = makeEl("div", "progress-wrap");
+          var lab = makeEl("div", "progress-label");
+          lab.appendChild(makeEl("span", null, t("yourProgLabel")));
+          lab.appendChild(makeEl("span", null, pct + "%"));
+          wrap.appendChild(lab);
+          var bar = makeEl("div", "progress-bar");
+          var fill = makeEl("div", "progress-fill");
+          fill.style.width = pct + "%";
+          bar.appendChild(fill);
+          wrap.appendChild(bar);
+          card.appendChild(wrap);
+        }
+
+        var btn = makeEl("a", "btn btn-primary btn-block", t("apply"));
+        btn.href = "apply.html?id=" + encodeURIComponent(s.id);
+        card.appendChild(btn);
+        grid.appendChild(card);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About – Document Ready</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <section class="apply-section">
+      <h2 data-i18n="aboutWhatTitle">What is Document Ready?</h2>
+      <p data-i18n="aboutWhatP1"></p>
+      <p class="mt-2" data-i18n="aboutWhatP2"></p>
+    </section>
+    <section class="apply-section">
+      <h2 data-i18n="aboutWhyTitle">Why it exists</h2>
+      <p data-i18n="aboutWhyP"></p>
+    </section>
+    <div class="features-grid">
+      <div class="feature-box">
+        <div class="f-icon">📋</div>
+        <h3 data-i18n="featChecklists"></h3>
+        <p data-i18n="featChecklistsP"></p>
+      </div>
+      <div class="feature-box">
+        <div class="f-icon">📍</div>
+        <h3 data-i18n="featOffices"></h3>
+        <p data-i18n="featOfficesP"></p>
+      </div>
+      <div class="feature-box">
+        <div class="f-icon">📊</div>
+        <h3 data-i18n="featProgress"></h3>
+        <p data-i18n="featProgressP"></p>
+      </div>
+      <div class="feature-box">
+        <div class="f-icon">🌐</div>
+        <h3 data-i18n="featLang"></h3>
+        <p data-i18n="featLangP"></p>
+      </div>
+    </div>
+    <p class="disclaimer mt-4" data-i18n="aboutDisclaimer"></p>
+  </div>
+  <script src="../js/auth.js"></script>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (!requireAuth()) return;
+      initShell("about", t("about"));
+    });
+  </script>
+</body>
+</html>

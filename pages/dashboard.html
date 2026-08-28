@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – Document Ready</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <div class="alert alert-info" data-i18n="welcomeDash">Welcome!</div>
+    <div class="dash-grid">
+      <div class="dash-card">
+        <h3 data-i18n="servicesStarted">Services started</h3>
+        <div class="big-num" id="statStarted">0</div>
+      </div>
+      <div class="dash-card">
+        <h3 data-i18n="avgProgress">Average progress</h3>
+        <div class="big-num" id="statAvg">0%</div>
+      </div>
+      <div class="dash-card">
+        <h3 data-i18n="formsSubmitted">Forms submitted</h3>
+        <div class="big-num" id="statForms">0</div>
+      </div>
+    </div>
+    <h2 class="mb-2" data-i18n="yourProgress">Your application progress</h2>
+    <div class="progress-list" id="progressList"></div>
+  </div>
+
+  <script src="../js/services-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/progress.js"></script>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (!requireAuth()) return;
+      initShell("dashboard", t("dashboard"));
+      showDashboard();
+    });
+
+    /* Step 1: read user progress and fill the list */
+    function showDashboard() {
+      var session = getCurrentUser();
+      var userProg = getUserProgress(session.email);
+      var ids = Object.keys(userProg);
+      var list = document.getElementById("progressList");
+      list.innerHTML = "";
+
+      var started = 0;
+      var totalPct = 0;
+      var forms = 0;
+
+      if (ids.length === 0) {
+        var empty = makeEl("div", "empty-state");
+        empty.appendChild(makeEl("div", "icon", "📂"));
+        empty.appendChild(makeEl("p", null, t("noServiceYet")));
+        var link = makeEl("a", "btn btn-primary mt-2", t("browseServices"));
+        link.href = "services.html";
+        empty.appendChild(link);
+        list.appendChild(empty);
+        return;
+      }
+
+      for (var i = 0; i < ids.length; i++) {
+        var id = ids[i];
+        var service = getServiceById(id);
+        if (!service) continue;
+
+        started = started + 1;
+        var pct = calcProgressPercent(id);
+        totalPct = totalPct + pct;
+        var prog = userProg[id];
+        if (prog && prog.formSubmitted) forms = forms + 1;
+
+        var item = makeEl("div", "progress-item");
+        item.appendChild(makeEl("h4", null, service.icon + " " + L(service, "name")));
+
+        var wrap = makeEl("div", "progress-wrap");
+        var label = makeEl("div", "progress-label");
+        label.appendChild(makeEl("span", null, t("progress")));
+        label.appendChild(makeEl("span", null, pct + "%"));
+        wrap.appendChild(label);
+
+        var bar = makeEl("div", "progress-bar");
+        var fill = makeEl("div", "progress-fill");
+        fill.style.width = pct + "%";
+        bar.appendChild(fill);
+        wrap.appendChild(bar);
+        item.appendChild(wrap);
+
+        var checked = prog.checked ? prog.checked.length : 0;
+        var meta = makeEl("p", "text-muted mt-1");
+        meta.style.fontSize = "0.85rem";
+        var metaText = checked + " / " + service.documents.length + " " + t("docsChecked");
+        if (prog.formSubmitted) metaText = metaText + " · " + t("formSubmitted");
+        meta.textContent = metaText;
+        item.appendChild(meta);
+
+        var cont = makeEl("a", "btn btn-sm btn-primary mt-2", t("continueBtn"));
+        cont.href = "apply.html?id=" + encodeURIComponent(id);
+        item.appendChild(cont);
+
+        list.appendChild(item);
+      }
+
+      document.getElementById("statStarted").textContent = String(started);
+      document.getElementById("statAvg").textContent = started ? Math.round(totalPct / started) + "%" : "0%";
+      document.getElementById("statForms").textContent = String(forms);
+    }
+  </script>
+</body>
+</html>

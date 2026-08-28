@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apply – Document Ready</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <div id="applyRoot"></div>
+  </div>
+
+  <script src="../js/services-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/progress.js"></script>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    var currentService = null;
+
+    document.addEventListener("DOMContentLoaded", function () {
+      if (!requireAuth()) return;
+
+      var params = new URLSearchParams(window.location.search);
+      var id = params.get("id");
+      currentService = getServiceById(id);
+
+      if (!currentService) {
+        initShell("services", t("apply"));
+        var root = document.getElementById("applyRoot");
+        root.appendChild(makeEl("div", "alert alert-danger", t("serviceNotFound")));
+        var back = makeEl("a", "btn btn-primary", t("backServices"));
+        back.href = "services.html";
+        root.appendChild(back);
+        return;
+      }
+
+      initShell("services", L(currentService, "name"));
+      showApplyPage(currentService);
+    });
+
+    function showApplyPage(service) {
+      var root = document.getElementById("applyRoot");
+      root.innerHTML = "";
+
+      var prog = getServiceProgress(service.id);
+      var checked = prog.checked || [];
+      var pct = calcProgressPercent(service.id);
+
+      /* Info alert */
+      root.appendChild(makeEl("div", "alert alert-info", t("notOfficial")));
+
+      /* Progress bar */
+      var progWrap = makeEl("div", "progress-wrap mb-3");
+      var progLabel = makeEl("div", "progress-label");
+      progLabel.appendChild(makeEl("span", null, t("overallProgress")));
+      var pctSpan = makeEl("span", null, pct + "%");
+      pctSpan.id = "pctLabel";
+      progLabel.appendChild(pctSpan);
+      progWrap.appendChild(progLabel);
+      var bar = makeEl("div", "progress-bar");
+      var fill = makeEl("div", "progress-fill");
+      fill.id = "pctBar";
+      fill.style.width = pct + "%";
+      bar.appendChild(fill);
+      progWrap.appendChild(bar);
+      root.appendChild(progWrap);
+
+      /* Step 1: checklist */
+      var sec1 = makeEl("section", "apply-section");
+      sec1.appendChild(makeEl("h2", null, t("checklistTitle")));
+      sec1.appendChild(makeEl("p", "text-muted mb-2", t("checklistHint")));
+
+      var ul = makeEl("ul", "checklist");
+      ul.id = "checklist";
+
+      for (var i = 0; i < service.documents.length; i++) {
+        var doc = service.documents[i];
+        var isDone = checked.indexOf(i) !== -1;
+
+        var li = makeEl("li", "checklist-item" + (isDone ? " done" : ""));
+        li.setAttribute("data-idx", String(i));
+
+        var box = document.createElement("input");
+        box.type = "checkbox";
+        box.id = "doc" + i;
+        box.checked = isDone;
+        li.appendChild(box);
+
+        var body = makeEl("div", "item-body");
+        body.appendChild(makeEl("div", "item-title", L(doc, "title")));
+        body.appendChild(makeEl("div", "item-tip", L(doc, "tip")));
+
+        var sample = makeEl("div", "sample-doc");
+        sample.appendChild(makeEl("h4", null, t("howToPrepare")));
+        sample.appendChild(makeEl("p", null, L(doc, "howTo")));
+        sample.appendChild(makeEl("h4", "mt-2", t("officesToGo")));
+        sample.appendChild(makeEl("p", null, L(doc, "offices")));
+        body.appendChild(sample);
+
+        li.appendChild(body);
+        ul.appendChild(li);
+
+        /* When user ticks a box, save progress */
+        box.addEventListener("change", onCheckChange);
+      }
+      sec1.appendChild(ul);
+      root.appendChild(sec1);
+
+      /* Step 2: application form */
+      var sec2 = makeEl("section", "apply-section");
+      sec2.appendChild(makeEl("h2", null, t("appDetailsTitle")));
+      sec2.appendChild(makeEl("p", "text-muted mb-2", t("appDetailsHint")));
+
+      if (prog.formSubmitted) {
+        sec2.appendChild(makeEl("div", "alert alert-info", t("formAlready")));
+      }
+
+      var form = makeEl("form");
+      form.id = "appForm";
+
+      form.appendChild(makeField("fullName", t("fullName"), "text", prog.formData && prog.formData.fullName));
+      form.appendChild(makeField("phone", t("phone"), "tel", prog.formData && prog.formData.phone));
+      form.appendChild(makeField("city", t("city"), "text", prog.formData && prog.formData.city));
+
+      var notesGroup = makeEl("div", "form-group");
+      notesGroup.appendChild(makeEl("label", null, t("notes")));
+      var notes = document.createElement("textarea");
+      notes.id = "notes";
+      notes.className = "form-control";
+      notes.rows = 3;
+      notes.value = (prog.formData && prog.formData.notes) || "";
+      notesGroup.appendChild(notes);
+      form.appendChild(notesGroup);
+
+      var submit = makeEl("button", "btn btn-primary", t("saveApp"));
+      submit.type = "submit";
+      form.appendChild(submit);
+      form.addEventListener("submit", onFormSubmit);
+
+      sec2.appendChild(form);
+      root.appendChild(sec2);
+
+      root.appendChild(makeEl("p", "disclaimer", t("disclaimer")));
+      var back = makeEl("a", "btn btn-outline mt-2", "← " + t("backServices"));
+      back.href = "services.html";
+      root.appendChild(back);
+    }
+
+    function makeField(id, labelText, type, value) {
+      var group = makeEl("div", "form-group");
+      var lab = makeEl("label", null, labelText);
+      lab.setAttribute("for", id);
+      group.appendChild(lab);
+      var input = document.createElement("input");
+      input.type = type;
+      input.id = id;
+      input.className = "form-control";
+      if (id === "fullName") input.required = true;
+      input.value = value || "";
+      group.appendChild(input);
+      return group;
+    }
+
+    function onCheckChange(e) {
+      var box = e.target;
+      var li = box.closest(".checklist-item");
+      var idx = parseInt(li.getAttribute("data-idx"), 10);
+      var current = getServiceProgress(currentService.id);
+      var list = current.checked ? current.checked.slice() : [];
+
+      if (box.checked) {
+        if (list.indexOf(idx) === -1) list.push(idx);
+        li.classList.add("done");
+      } else {
+        var next = [];
+        for (var i = 0; i < list.length; i++) {
+          if (list[i] !== idx) next.push(list[i]);
+        }
+        list = next;
+        li.classList.remove("done");
+      }
+      current.checked = list;
+      setServiceProgress(currentService.id, current);
+      updatePct();
+    }
+
+    function onFormSubmit(e) {
+      e.preventDefault();
+      var current = getServiceProgress(currentService.id);
+      current.formSubmitted = true;
+      current.formData = {
+        fullName: document.getElementById("fullName").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        city: document.getElementById("city").value.trim(),
+        notes: document.getElementById("notes").value.trim()
+      };
+      setServiceProgress(currentService.id, current);
+      updatePct();
+
+      var checkedCount = current.checked ? current.checked.length : 0;
+      saveApplicationForAdmin(currentService, current.formData, checkedCount);
+      alert(t("savedMsg"));
+    }
+
+    function updatePct() {
+      var pct = calcProgressPercent(currentService.id);
+      var label = document.getElementById("pctLabel");
+      var bar = document.getElementById("pctBar");
+      if (label) label.textContent = pct + "%";
+      if (bar) bar.style.width = pct + "%";
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – Document Ready</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body class="auth-page">
+  <div class="auth-card">
+    <div style="text-align:right;margin-bottom:0.75rem">
+      <select id="langSelectAuth" class="lang-select" style="width:auto;color:var(--text);background:var(--bg);border-color:var(--border)">
+        <option value="en">English</option>
+        <option value="fr">Francais</option>
+      </select>
+    </div>
+    <h1 data-i18n="loginTitle">Welcome Back</h1>
+    <p class="subtitle" data-i18n="loginSubtitle">Log in to continue</p>
+    <div id="msg" class="alert alert-danger hidden"></div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email" data-i18n="email">Email</label>
+        <input type="email" id="email" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="password" data-i18n="password">Password</label>
+        <div class="password-wrap">
+          <input type="password" id="password" class="form-control" required>
+          <button type="button" class="password-toggle" id="togglePass">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="loginBtn">Login</button>
+    </form>
+    <p class="text-center mt-3 text-muted">
+      <span data-i18n="noAccount">No account yet?</span>
+      <a href="register.html" data-i18n="createOne">Create one</a>
+    </p>
+    <p class="text-center mt-2">
+      <a href="../index.html" class="btn-ghost" data-i18n="backHome">Back to home</a>
+    </p>
+  </div>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      redirectIfLoggedIn();
+      applyTranslations();
+      setupAuthLangSelect("langSelectAuth");
+      setupPasswordToggle("togglePass", "password");
+
+      document.getElementById("loginForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var msg = document.getElementById("msg");
+        msg.classList.add("hidden");
+        var result = loginUser(
+          document.getElementById("email").value,
+          document.getElementById("password").value
+        );
+        if (!result.ok) {
+          msg.textContent = result.msg;
+          msg.classList.remove("hidden");
+          return;
+        }
+        window.location.href = "dashboard.html";
+      });
+    });
+  </script>
+</body>
+</html>
