@@ -1,6 +1,6 @@
 # Document Ready 4
 
-Beginner-friendly checklist app for government services in Cameroon.
+Beginner-friendly checklist website for government services in Cameroon.
 
 ## File map (easy to find things)
 
@@ -26,7 +26,7 @@ Beginner-friendly checklist app for government services in Cameroon.
 
 ## How to run
 
-Open index.html in a browser.
+https://document-ready.netlify.app/
 
 ## Scripts on each page (order)
 
