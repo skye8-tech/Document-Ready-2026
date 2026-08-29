@@ -1,4 +1,4 @@
-# Document Ready 4
+# Document Ready 
 
 Beginner-friendly checklist website for government services in Cameroon.
 
@@ -28,11 +28,3 @@ Beginner-friendly checklist website for government services in Cameroon.
 
 https://document-ready.netlify.app/
 
-## Scripts on each page (order)
-
-1. services-data.js (if needed)
-2. auth.js
-3. progress.js (if needed)
-4. i18n.js
-5. ui.js
-6. main.js
